@@ -1,0 +1,53 @@
+{
+    "transcription": " Hello, hello, here this is Batman. Batman from where? I mean like I'm the actual Batman. What the fuck are you talking about? I'm being on the Batman. Bye, I'm leaving you here. You don't know what you're talking about. You don't know what you're talking about at all.",
+    "segments": [
+        {
+            "text": " Hello, hello, here this is Batman.",
+            "speaker": "SPEAKER_00",
+            "start": 0.0,
+            "end": 4.2
+        },
+        {
+            "text": " Batman from where?",
+            "speaker": "SPEAKER_00",
+            "start": 4.2,
+            "end": 6.2
+        },
+        {
+            "text": " I mean like I'm the actual Batman.",
+            "speaker": "SPEAKER_00",
+            "start": 6.2,
+            "end": 9.8
+        },
+        {
+            "text": " What the fuck are you talking about?",
+            "speaker": "SPEAKER_00",
+            "start": 9.8,
+            "end": 12.8
+        },
+        {
+            "text": " I'm being on the Batman.",
+            "speaker": "SPEAKER_00",
+            "start": 12.8,
+            "end": 15.8
+        },
+        {
+            "text": " Bye, I'm leaving you here.",
+            "speaker": "SPEAKER_00",
+            "start": 15.8,
+            "end": 18.2
+        },
+        {
+            "text": " You don't know what you're talking about.",
+            "speaker": "SPEAKER_00",
+            "start": 18.2,
+            "end": 20.400000000000002
+        },
+        {
+            "text": " You don't know what you're talking about at all.",
+            "speaker": "SPEAKER_00",
+            "start": 20.400000000000002,
+            "end": 22.2
+        }
+    ]
+}
