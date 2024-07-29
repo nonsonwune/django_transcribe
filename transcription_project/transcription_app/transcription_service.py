@@ -93,7 +93,12 @@ class TranscriptionService:
 
     def save_transcription_as_json(self, transcription, segments, audio_path):
         audio_name = Path(audio_path).stem
-        transcription_dir = Path("transcriptions") / self.session_id / audio_name
+        transcription_dir = (
+            Path(settings.MEDIA_ROOT)
+            / "transcriptions"
+            / str(self.session_id)
+            / audio_name
+        )
         transcription_dir.mkdir(parents=True, exist_ok=True)
         file_name = transcription_dir / f"{audio_name}_transcription_with_speakers.json"
 
@@ -114,7 +119,12 @@ class TranscriptionService:
 
     def save_transcription_as_srt(self, transcription, segments, audio_path):
         audio_name = Path(audio_path).stem
-        transcription_dir = Path("transcriptions") / self.session_id / audio_name
+        transcription_dir = (
+            Path(settings.MEDIA_ROOT)
+            / "transcriptions"
+            / str(self.session_id)
+            / audio_name
+        )
         transcription_dir.mkdir(parents=True, exist_ok=True)
         file_name = transcription_dir / f"{audio_name}_transcription_with_speakers.srt"
 
@@ -130,7 +140,12 @@ class TranscriptionService:
 
     def save_transcription_as_vtt(self, transcription, segments, audio_path):
         audio_name = Path(audio_path).stem
-        transcription_dir = Path("transcriptions") / self.session_id / audio_name
+        transcription_dir = (
+            Path(settings.MEDIA_ROOT)
+            / "transcriptions"
+            / str(self.session_id)
+            / audio_name
+        )
         transcription_dir.mkdir(parents=True, exist_ok=True)
         file_name = transcription_dir / f"{audio_name}_transcription_with_speakers.vtt"
 

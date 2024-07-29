@@ -1,9 +1,0 @@
-SPEAKER_02:  Hello, who am I on to?
-SPEAKER_02:  This is Mr. Chinato.
-SPEAKER_02:  Mr. Chinato, why are you calling? Is there a problem?
-SPEAKER_01:  Yeah, I only want to ask if you will be needing a $2 billion.
-SPEAKER_01:  Because I have access to cash at the moment.
-SPEAKER_02:  $2 billion is not enough money to get my attention. Please, can you come up with a little bit more?
-SPEAKER_01:  Okay, if that should be the case, can a trillion dollars make sense?
-SPEAKER_02:  Now you are talking. So, yeah, so it should be the last we know for my child.
-SPEAKER_02:  Alright, thank you for making this call. Have a nice day.

@@ -24,8 +24,9 @@ class AudioFile(models.Model):
         return os.path.join(
             settings.MEDIA_ROOT,
             "transcriptions",
-            f"{self.id}",
-            f"{base_name}.{extension}",
+            str(self.user.id),
+            base_name,
+            f"{base_name}_transcription_with_speakers.{extension}",
         )
 
     def get_file_url(self, extension):

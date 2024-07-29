@@ -15,6 +15,7 @@ from rest_framework_simplejwt.views import TokenObtainPairView
 from .serializers import CustomTokenObtainPairSerializer
 import logging
 from django.http import FileResponse
+from django.conf import settings
 
 
 logger = logging.getLogger(__name__)
@@ -65,10 +66,8 @@ class AudioFileViewSet(viewsets.ModelViewSet):
                 {"error": "File not found"}, status=status.HTTP_404_NOT_FOUND
             )
 
-
-@action(detail=True, methods=["get"])
-def download(self, request, pk=None):
-    try:
+    @action(detail=True, methods=["get"])
+    def download(self, request, pk=None):
         audio_file = self.get_object()
         format = request.query_params.get("format", "txt")
 
@@ -77,51 +76,25 @@ def download(self, request, pk=None):
                 {"error": "Invalid format"}, status=status.HTTP_400_BAD_REQUEST
             )
 
-        # Get the directory path of the processed file
-        dir_path = os.path.join(
-            settings.MEDIA_ROOT,
-            "transcriptions",
-            str(audio_file.user.id),  # Use user_id instead of audio_file.id
-            os.path.splitext(os.path.basename(audio_file.file.name))[0],
-        )
-
-        # Construct the file path dynamically based on the audio_file instance
-        file_name = f"{os.path.basename(audio_file.file.name)}_transcription_with_speakers.{format}"
-        file_path = os.path.join(dir_path, file_name)
+        file_path = audio_file.get_file_path(format)
 
         if not os.path.exists(file_path):
-            logger.error(f"File not found for download: {file_path}")
-            return Response(
-                {"error": f"File not found: {format}"},
-                status=status.HTTP_404_NOT_FOUND,
-            )
-
-        response = FileResponse(open(file_path, "rb"))
-        response["Content-Disposition"] = f"attachment; filename={file_name}"
-        logger.info(f"File path for download: {file_path}")
-        logger.info(f"File exists: {os.path.exists(file_path)}")
-        return response
-    except AudioFile.DoesNotExist:
-        logger.error(f"Audio file not found for download, ID: {pk}")
-        return Response({"error": "File not found"}, status=status.HTTP_404_NOT_FOUND)
-    except Exception as e:
-        logger.error(f"Error during file download: {str(e)}")
-        return Response(
-            {"error": "An unexpected error occurred"},
-            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
-        )
-
-    @action(detail=True, methods=["get"])
-    def status(self, request, pk=None):
-        try:
-            audio_file = self.get_object()
-            return Response(
-                {"status": audio_file.status, "processed": audio_file.processed}
-            )
-        except AudioFile.DoesNotExist:
-            logger.error(f"Audio file not found for status check, ID: {pk}")
             return Response(
                 {"error": "File not found"}, status=status.HTTP_404_NOT_FOUND
+            )
+
+        try:
+            with open(file_path, "rb") as file:
+                response = HttpResponse(
+                    file.read(), content_type="application/octet-stream"
+                )
+                response["Content-Disposition"] = (
+                    f'attachment; filename="{os.path.basename(file_path)}"'
+                )
+                return response
+        except Exception as e:
+            return Response(
+                {"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
 
