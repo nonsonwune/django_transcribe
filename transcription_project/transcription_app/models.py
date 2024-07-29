@@ -19,6 +19,15 @@ class AudioFile(models.Model):
     transcription_text = models.TextField(blank=True, null=True)
     transcription_json = models.JSONField(blank=True, null=True)
 
+    def get_file_path(self, extension):
+        base_name = os.path.splitext(os.path.basename(self.file.name))[0]
+        return os.path.join(
+            settings.MEDIA_ROOT,
+            "transcriptions",
+            f"{self.id}",
+            f"{base_name}.{extension}",
+        )
+
     def get_file_url(self, extension):
         base_name = os.path.splitext(self.file.name)[0]
         return os.path.join(settings.MEDIA_URL, f"{base_name}.{extension}")

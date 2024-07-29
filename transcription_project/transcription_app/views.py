@@ -14,6 +14,8 @@ import os
 from rest_framework_simplejwt.views import TokenObtainPairView
 from .serializers import CustomTokenObtainPairSerializer
 import logging
+from django.http import FileResponse
+
 
 logger = logging.getLogger(__name__)
 
@@ -23,61 +25,103 @@ class AudioFileViewSet(viewsets.ModelViewSet):
     serializer_class = AudioFileSerializer
 
     def perform_create(self, serializer):
-        audio_file = serializer.save(user=self.request.user)
-        process_audio_file.delay(audio_file.id)
+        try:
+            serializer.save(user=self.request.user)
+            audio_file_id = serializer.instance.id
+            process_audio_file.delay(audio_file_id)
+            logger.info(
+                f"AudioFile created successfully for user {self.request.user.username}"
+            )
+        except Exception as e:
+            logger.error(f"Error creating AudioFile: {str(e)}")
+            raise
 
-    @action(detail=True, methods=["get"])
-    def status(self, request, pk=None):
-        audio_file = self.get_object()
-        return Response(
-            {
-                "status": audio_file.status,
-                "progress": getattr(audio_file, "progress", 0),
-                "error_message": getattr(audio_file, "error_message", ""),
-            }
-        )
+    def create(self, request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            return Response(
+                {"error": "Authentication required"},
+                status=status.HTTP_401_UNAUTHORIZED,
+            )
+        return super().create(request, *args, **kwargs)
 
     @action(detail=True, methods=["get"])
     def transcription(self, request, pk=None):
-        audio_file = self.get_object()
-        if audio_file.processed:
+        try:
+            audio_file = self.get_object()
+            if not audio_file.processed:
+                return Response(
+                    {"error": "Transcription not ready"},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
             return Response(
                 {
                     "text": audio_file.transcription_text,
                     "json": audio_file.transcription_json,
-                    "srt_url": audio_file.get_srt_url(),
-                    "vtt_url": audio_file.get_vtt_url(),
-                    "txt_url": audio_file.get_txt_url(),
-                    "json_url": audio_file.get_json_url(),
                 }
             )
-        else:
+        except AudioFile.DoesNotExist:
+            logger.error(f"Transcription not found for file ID: {pk}")
             return Response(
-                {"error": "Transcription not yet processed"},
-                status=status.HTTP_400_BAD_REQUEST,
+                {"error": "File not found"}, status=status.HTTP_404_NOT_FOUND
             )
 
-    @action(detail=True, methods=["get"])
-    def download(self, request, pk=None):
+
+@action(detail=True, methods=["get"])
+def download(self, request, pk=None):
+    try:
         audio_file = self.get_object()
-        file_format = request.query_params.get("format", "json")
+        format = request.query_params.get("format", "txt")
 
-        if not audio_file.processed:
-            return Response(
-                {"error": "File not yet processed"}, status=status.HTTP_400_BAD_REQUEST
-            )
-
-        if file_format == "json":
-            return Response(audio_file.transcription_json)
-        elif file_format == "txt":
-            return Response(audio_file.transcription_text)
-        elif file_format == "srt":
-            return Response(audio_file.get_srt_url())
-        elif file_format == "vtt":
-            return Response(audio_file.get_vtt_url())
-        else:
+        if format not in ["json", "txt", "srt", "vtt"]:
             return Response(
                 {"error": "Invalid format"}, status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Get the directory path of the processed file
+        dir_path = os.path.join(
+            settings.MEDIA_ROOT,
+            "transcriptions",
+            str(audio_file.user.id),  # Use user_id instead of audio_file.id
+            os.path.splitext(os.path.basename(audio_file.file.name))[0],
+        )
+
+        # Construct the file path dynamically based on the audio_file instance
+        file_name = f"{os.path.basename(audio_file.file.name)}_transcription_with_speakers.{format}"
+        file_path = os.path.join(dir_path, file_name)
+
+        if not os.path.exists(file_path):
+            logger.error(f"File not found for download: {file_path}")
+            return Response(
+                {"error": f"File not found: {format}"},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        response = FileResponse(open(file_path, "rb"))
+        response["Content-Disposition"] = f"attachment; filename={file_name}"
+        logger.info(f"File path for download: {file_path}")
+        logger.info(f"File exists: {os.path.exists(file_path)}")
+        return response
+    except AudioFile.DoesNotExist:
+        logger.error(f"Audio file not found for download, ID: {pk}")
+        return Response({"error": "File not found"}, status=status.HTTP_404_NOT_FOUND)
+    except Exception as e:
+        logger.error(f"Error during file download: {str(e)}")
+        return Response(
+            {"error": "An unexpected error occurred"},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
+
+    @action(detail=True, methods=["get"])
+    def status(self, request, pk=None):
+        try:
+            audio_file = self.get_object()
+            return Response(
+                {"status": audio_file.status, "processed": audio_file.processed}
+            )
+        except AudioFile.DoesNotExist:
+            logger.error(f"Audio file not found for status check, ID: {pk}")
+            return Response(
+                {"error": "File not found"}, status=status.HTTP_404_NOT_FOUND
             )
 
 

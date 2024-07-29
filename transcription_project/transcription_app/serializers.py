@@ -15,6 +15,8 @@ class UserSerializer(serializers.ModelSerializer):
 
 
 class AudioFileSerializer(serializers.ModelSerializer):
+    user = serializers.ReadOnlyField(source="user.username")
+
     class Meta:
         model = AudioFile
         fields = (
@@ -24,7 +26,9 @@ class AudioFileSerializer(serializers.ModelSerializer):
             "processed",
             "status",
             "transcription_text",
+            "user",
         )
+        read_only_fields = ("user",)
 
 
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):

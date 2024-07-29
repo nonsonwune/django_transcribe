@@ -187,3 +187,6 @@ SIMPLE_JWT = {
 }
 
 CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP = True
+
+MEDIA_URL = "/media/"
+MEDIA_ROOT = os.path.join(BASE_DIR, "media")
